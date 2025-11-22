@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FunCaption — Generate Viral Captions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070a; --card:rgba(255,255,255,0.03); --muted:#9aa4b2; --accent:#d4af37; --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#06060a,#0b0d10);font-family:Inter,system-ui,Arial;color:#fff}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+.card{width:100%;max-width:960px;background:var(--card);padding:28px;border-radius:var(--radius);box-shadow:0 18px 50px rgba(2,6,23,0.65);backdrop-filter:blur(6px)}
+.header{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.logo{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ffb84d);display:flex;align-items:center;justify-content:center;font-family:"Playfair Display",serif;font-weight:700;color:#071118}
+.brand{font-family:"Playfair Display",serif;font-size:20px;font-weight:700}
+.tag{color:var(--muted);font-size:13px}
+h1{margin:12px 0 8px 0;font-size:26px}
+.p-lead{margin:0 0 16px 0;color:var(--muted)}
+.label{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}
+.row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.col{flex:1}
+input[type=text], select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff;font-size:15px}
+.small{font-size:13px;color:var(--muted)}
+.controls{display:flex;gap:10px;align-items:center;margin-top:12px}
+.btn{background:var(--accent);color:#071118;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+.btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+.switch{display:inline-flex;align-items:center;gap:8px}
+.result{margin-top:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:10px;min-height:110px;white-space:pre-wrap;font-size:17px;border:1px solid rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between}
+.result-text{flex:1;padding-right:12px}
+.copy{background:#2b2f35;border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
+.spinner{width:16px;height:16px;border-radius:50%;border:3px solid rgba(255,255,255,0.08);border-top-color:var(--accent);animation:spin 1s linear infinite;display:inline-block;vertical-align:middle;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mood-shelf{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.mood-chip{padding:6px 10px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-size:13px;cursor:pointer}
+.mood-chip.primary{border-color:rgba(212,175,55,0.9); color:var(--accent)}
+.mood-input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff;font-size:15px}
+@media(max-width:720px){.row{flex-direction:column}}
+.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+.note{margin-top:10px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card" role="main" aria-labelledby="page-title">
+      <div class="header">
+        <div class="logo" aria-hidden="true">FC</div>
+        <div>
+          <div class="brand">FunCaption</div>
+          <div class="tag">Think less, grow more — Home of Trendsetters</div>
+        </div>
+      </div>
+
+      <h1 id="page-title">Generate a viral caption — fast</h1>
+      <p class="p-lead">Subject + Mood + Hashtags + Variants. Instant on-page result — no email, no redirect.</p>
+
+      <!-- Subject -->
+      <label class="label" for="subject">Subject (short & specific)</label>
+      <input id="subject" type="text" placeholder="e.g. summer streetwear drop, gym transformation" aria-label="Subject" />
+
+      <!-- Mood + Popular chips -->
+      <div style="margin-top:10px">
+        <div class="small" style="margin-bottom:6px">Mood</div>
+        <div class="mood-shelf" id="popularMoods" aria-hidden="false"></div>
+        <input id="moodInput" class="mood-input" list="moodList" placeholder="Type or choose a mood (e.g. Attitude)" aria-label="Mood">
+        <datalist id="moodList"></datalist>
+      </div>
+
+      <!-- Hashtags + Variants -->
+      <div class="row" style="margin-top:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <label class="switch small">Hashtags
+            <input id="hashtags" type="checkbox" aria-label="Include hashtags" style="margin-left:8px">
+          </label>
+        </div>
+
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <label class="small" for="variants">Variants</label>
+          <select id="variants" aria-label="Variants">
+            <option value="1">1</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:14px">
+        <button id="generateBtn" class="btn">Generate Caption</button>
+        <button id="copyBtn" class="copy" disabled>Copy</button>
+        <button id="clearBtn" class="btn secondary">Clear</button>
+      </div>
+
+      <div id="status" class="note" aria-live="polite">Ready</div>
+
+      <div id="result" class="result" role="status" aria-live="polite">
+        <div class="result-text" id="resultText">Your caption will appear here after generation.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <div id="moodBadge" class="small" style="color:var(--muted)"></div>
+          <button id="copyInline" class="copy" style="display:none">Copy</button>
+        </div>
+      </div>
+
+      <div class="note">Tip: pick a short subject and choose mood quickly with the chips above. Popular: Attitude, Trendy, Funny.</div>
+    </main>
+  </div>
+
+<script>
+/* ======= CONFIG - REPLACE BEFORE DEPLOY ======= */
+const MAKE_WEBHOOK = 'https://hook.eu2.make.com/4kbdnpo89i0u8o5egt9edlepbs8kxn6d';     // 
+const CLIENT_TOKEN = 'fc_secret_2025';    //  
+/* ============================================== */
+
+const moods = [
+"Attitude","Confident","Romantic","Funny","Sarcastic","Motivational","Tapori","Gujarati","Desi (Hinglish)","Punjabi Vibe",
+"Streetwear / Edgy","Luxury / Premium","Professional","Inspirational","Party / Fun","Emotional / Heartfelt","Chill / Relaxed","Dark / Moody","Trendy / Viral","Caring / Soft",
+"Bold / Aggressive","Playful / Flirty","Storytelling","Minimal / One-liner","Promotional / CTA","Nostalgic","Rebellious","Lifestyle / Travel","Product Launch","Meme"
+];
+
+// DOM refs
+const subjectEl = document.getElementById('subject');
+const moodInput = document.getElementById('moodInput');
+const moodList = document.getElementById('moodList');
+const popularMoods = document.getElementById('popularMoods');
+const hashtagsEl = document.getElementById('hashtags');
+const variantsEl = document.getElementById('variants');
+const generateBtn = document.getElementById('generateBtn');
+const copyBtn = document.getElementById('copyBtn');
+const copyInline = document.getElementById('copyInline');
+const clearBtn = document.getElementById('clearBtn');
+const statusEl = document.getElementById('status');
+const resultText = document.getElementById('resultText');
+const moodBadge = document.getElementById('moodBadge');
+
+let lastCaption = '';
+let lastRequest = 0;
+
+// populate datalist + popular chips
+(function initMoods(){
+  moods.forEach(m=>{
+    const opt = document.createElement('option'); opt.value = m; moodList.appendChild(opt);
+  });
+  const popular = ["Attitude","Trendy / Viral","Funny","Romantic","Desi (Hinglish)"];
+  popular.forEach(p=>{
+    const b = document.createElement('button'); b.className='mood-chip'; b.type='button'; b.textContent = p;
+    b.addEventListener('click', ()=>{ moodInput.value = p; highlightChip(b); });
+    popularMoods.appendChild(b);
+  });
+})();
+function highlightChip(chip){
+  document.querySelectorAll('.mood-chip').forEach(c=>c.classList.remove('primary'));
+  if(chip) chip.classList.add('primary');
+}
+
+// status helper
+function setStatus(t, loading=false){
+  statusEl.textContent = t;
+  const existing = document.getElementById('spn');
+  if(loading){
+    if(!existing){ const s = document.createElement('span'); s.id='spn'; s.className='spinner'; statusEl.appendChild(s); }
+  } else { if(existing) existing.remove(); }
+}
+
+// enable/disable copy
+function enableCopy(on){
+  copyBtn.disabled = !on;
+  copyInline.style.display = on ? 'inline-block' : 'none';
+}
+
+// generate caption (with timeout and simple retry for network errors)
+async function generateCaption(){
+  const now = Date.now();
+  if(now - lastRequest < 1200){ setStatus('Please wait a moment'); return; } // throttle
+  lastRequest = now;
+
+  const subject = (subjectEl.value||'').trim();
+  const mood = (moodInput.value||'Trendy / Viral').trim();
+  const include_hashtags = Boolean(hashtagsEl.checked);
+  const variants = parseInt(variantsEl.value || '1', 10);
+
+  if(!subject){
+    alert('Enter a subject (short).');
+    subjectEl.focus();
+    return;
+  }
+
+  if(MAKE_WEBHOOK.includes('YOUR_MAKE_WEBHOOK_HERE') || CLIENT_TOKEN.includes('YOUR_CLIENT_TOKEN_HERE')){
+    alert('Webhook or client token not configured. Edit index.html and paste values.');
+    return;
+  }
+
+  generateBtn.disabled = true;
+  enableCopy(false);
+  setStatus('Generating caption…', true);
+  resultText.textContent = 'Generating…';
+  moodBadge.textContent = '';
+
+  const payload = {
+    subject,
+    mood,
+    include_hashtags,
+    variants,
+    clientToken: CLIENT_TOKEN
+  };
+
+  // attempt up to 2 network tries (1 retry) for transient errors
+  for(let attempt=1; attempt<=2; attempt++){
+    try{
+      const controller = new AbortController();
+      const timeoutId = setTimeout(()=>controller.abort(), 12000);
+
+      const res = await fetch(MAKE_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if(!res.ok){
+        const txt = await res.text().catch(()=>null);
+        throw new Error('Server error '+res.status + (txt ? (': '+txt) : ''));
+      }
+
+      const data = await res.json();
+
+      if(data.error){
+        throw new Error(data.message || data.error);
+      }
+
+      // Support both single caption or captions array
+      let caption = '';
+      if(Array.isArray(data.captions) && data.captions.length>0){
+        caption = data.captions.join('\n\n');
+      } else if(data.caption){
+        caption = data.caption;
+      } else {
+        caption = (data.result || data.text || '').toString();
+      }
+
+      if(!caption || caption.trim().length === 0) throw new Error('No caption returned.');
+
+      lastCaption = caption.trim();
+      resultText.textContent = lastCaption;
+      moodBadge.textContent = Mood: ${mood} • Hashtags: ${include_hashtags ? 'Yes' : 'No'};
+      enableCopy(true);
+      setStatus('Done');
+      break; // success, exit retry loop
+
+    } catch(err){
+      console.error('Attempt', attempt, err);
+      if(err.name === 'AbortError'){
+        setStatus('Request timed out. Try again.');
+      } else {
+        setStatus(attempt === 2 ? 'Error — open console' : 'Network issue, retrying…');
+      }
+      if(attempt === 2){
+        resultText.textContent = 'Error generating caption. Try again later.';
+        enableCopy(false);
+      } else {
+        await new Promise(r => setTimeout(r, 900)); // short wait before retry
+      }
+    } finally {
+      generateBtn.disabled = false;
+    }
+  }
+}
+
+// copy handlers
+copyBtn.addEventListener('click', async ()=>{ if(!lastCaption) return; try{ await navigator.clipboard.writeText(lastCaption); alert('Copied'); } catch(e){ alert('Copy failed'); }});
+copyInline.addEventListener('click', async ()=>{ if(!lastCaption) return; try{ await navigator.clipboard.writeText(lastCaption); alert('Copied'); } catch(e){ alert('Copy failed'); }});
+
+// clear
+clearBtn.addEventListener('click', ()=>{ subjectEl.value=''; moodInput.value=''; hashtagsEl.checked=false; variantsEl.value='1'; resultText.textContent='Your caption will appear here after generation.'; setStatus('Ready'); enableCopy(false); lastCaption=''; moodBadge.textContent=''; });
+
+// Enter on subject triggers generate
+subjectEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); generateCaption(); }});
+
+// bind generate
+generateBtn.addEventListener('click', generateCaption);
+
+// initial UI state
+setStatus('Ready');
+enableCopy(false);
+</script>
+</body>
+</html>
